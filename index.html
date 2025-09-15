@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 核心视口配置，确保页面在移动端正确渲染 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>随机数字抽签系统（移动版）</title>
+    <style>
+        /* 基础重置与字体设置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif; /* 更通用的字体栈 */
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        
+        /* 容器样式 */
+        .container {
+            background-color: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px; /* 限制最大宽度，在大屏手机上更友好 */
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .description {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+        
+        /* 内容区域布局 - 移动端改为垂直堆叠 */
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        /* 通用区块样式 */
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: bold;
+            color: #444;
+            font-size: 1rem;
+        }
+        
+        /* 按钮基础样式 */
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px; /* 满足移动端可点击区域的最小尺寸 */
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+            background: #388E3C;
+        }
+        
+        .btn-danger {
+            background: #ff4757;
+        }
+        
+        .btn-danger:active {
+            background: #ff2e43;
+        }
+        
+        /* 列表样式 */
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 60px;
+        }
+        
+        /* 项目样式 (人员、数字、结果) */
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            justify-content: space-between;
+        }
+        
+        .person-item {
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
+        }
+        
+        .number-item {
+            background: linear-gradient(to right, #e8f5e9, #c8e6c9);
+        }
+        
+        /* 输入框样式 */
+        input[type="text"],
+        input[type="number"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            margin-right: 10px;
+            min-width: 0; /* 防止输入框在Flex布局中溢出 */
+            width: 100%; /* 默认占满宽度 */
+        }
+        
+        input[type="number"] {
+            width: 80px; /* 数字输入框固定宽度 */
+            text-align: center;
+        }
+        
+        /* 删除按钮 */
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            flex-shrink: 0; /* 防止按钮被压缩 */
+        }
+        
+        /* 结果数字显示 */
+        .result-number {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #2196f3;
+            margin-left: 8px;
+        }
+        
+        /* 按钮容器 */
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .draw-button {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 75, 43, 0.4);
+            min-height: 50px;
+        }
+        
+        .draw-button:disabled {
+            background: linear-gradient(to right, #cccccc, #999999);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+        
+        /* 提示信息 */
+        .hint {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        
+        .hint-error {
+            color: #ff4757;
+            font-weight: bold;
+        }
+        
+        .hint-success {
+            color: #4CAF50;
+        }
+        
+        /* 底部提示 */
+        .footer {
+            margin-top: 25px;
+            color: #888;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            padding: 0 5px;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+        
+        /* 占位符 */
+        .placeholder-item {
+            opacity: 0.6;
+            background: #f0f0f0 !important;
+            color: #999;
+            font-style: italic;
+            justify-content: center;
+        }
+        
+        /* 保存指示器 */
+        .save-indicator {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .save-indicator.show {
+            opacity: 1;
+        }
+        
+        .save-indicator.error {
+            background: #ff4757;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 400px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+            }
+            
+            .section {
+                padding: 12px;
+            }
+            
+            .btn {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+            
+            input[type="text"],
+            input[type="number"] {
+                padding: 10px;
+            }
+        }
+        
+        /* 防止iOS Safari中表单元素样式被覆盖 */
+        input, button, select, textarea {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="save-indicator" id="saveIndicator">数据已自动保存</div>
+    
+    <div class="container">
+        <h1>随机数字抽签系统（移动版）</h1>
+        <p class="description">添加人员与数字，点击抽签按钮随机分配。抽签后数字区域会自动清空，方便下次使用。</p>
+        
+        <div class="content">
+            <!-- 参与人员区 -->
+            <div class="section">
+                <div class="section-title">
+                    <span>参与人员</span>
+                    <button class="btn" id="addPersonBtn">+ 添加</button>
+                </div>
+                <div class="list" id="peopleList">
+                    <!-- 人员列表将由JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 分配数字区 -->
+            <div class="section">
+                <div class="section-title">
+                    <span>分配数字</span>
+                    <button class="btn" id="addNumberBtn">+ 添加</button>
+                </div>
+                <div class="list" id="numbersList">
+                    <!-- 数字列表将由JavaScript动态生成 -->
+                </div>
+                <div class="hint" id="numberHint">
+                    请输入要分配的数字，然后点击抽签
+                </div>
+            </div>
+            
+            <!-- 抽签结果区 -->
+            <div class="section">
+                <div class="section-title">抽签结果</div>
+                <div class="list" id="resultList">
+                    <!-- 结果列表将由JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button class="draw-button" id="drawButton">开始抽签</button>
+            <button class="draw-button" id="resetButton" style="background: linear-gradient(to right, #606060, #909090);">重置系统</button>
+        </div>
+        
+        <div class="footer">
+            <p><strong>提示：</strong></p>
+            <p>1. 点击"开始抽签"将一次性为所有人员分配数字</p>
+            <p>2. 每次抽签后需要重新填写数字区域</p>
+            <p>3. 人员数据会自动保存，数字区域每次抽签后会被清空</p>
+        </div>
+    </div>
+
+    <script>
+        // 初始化人员数据
+        let peopleData = [];
+        let numbersData = [];
+        let peopleCount = 0;
+        let numbersCount = 0;
+        let hasDrawn = false;
+        
+        // 获取DOM元素
+        const drawButton = document.getElementById('drawButton');
+        const resetButton = document.getElementById('resetButton');
+        const numbersList = document.getElementById('numbersList');
+        const resultList = document.getElementById('resultList');
+        const peopleList = document.getElementById('peopleList');
+        const addPersonBtn = document.getElementById('addPersonBtn');
+        const addNumberBtn = document.getElementById('addNumberBtn');
+        const saveIndicator = document.getElementById('saveIndicator');
+        const numberHint = document.getElementById('numberHint');
+        
+        // 初始化系统 - 从localStorage加载数据
+        function initializeSystem() {
+            // 尝试从localStorage加载数据
+            try {
+                const savedPeopleData = localStorage.getItem('drawSystem_peopleData');
+                
+                if (savedPeopleData) {
+                    peopleData = JSON.parse(savedPeopleData);
+                    peopleCount = peopleData.length;
+                } else {
+                    // 默认初始人员
+                    peopleData = ["张三", "李四", "王五", "赵六"].map(name => ({
+                        id: generateId(),
+                        name: name
+                    }));
+                    peopleCount = peopleData.length;
+                }
+                
+                // 数字区域始终初始化为空
+                numbersData = [];
+                numbersCount = 0;
+                
+            } catch (e) {
+                console.error("加载保存的数据时出错:", e);
+                // 出错时使用默认数据
+                peopleData = ["张三", "李四", "王五", "赵六"].map(name => ({
+                    id: generateId(),
+                    name: name
+                }));
+                numbersData = [];
+                peopleCount = peopleData.length;
+                numbersCount = 0;
+            }
+            
+            // 更新DOM
+            updatePeopleDOM();
+            updateNumbersDOM();
+            updateResultsDOM();
+            updateDrawButtonState();
+            
+            showSaveIndicator("数据已加载");
+        }
+        
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+        
+        // 保存数据到localStorage
+        function saveData() {
+            try {
+                localStorage.setItem('drawSystem_peopleData', JSON.stringify(peopleData));
+                showSaveIndicator("数据已自动保存");
+            } catch (e) {
+                console.error("保存数据时出错:", e);
+                showSaveIndicator("保存失败: " + e.message, true);
+            }
+        }
+        
+        // 显示保存指示器
+        function showSaveIndicator(message, isError = false) {
+            saveIndicator.textContent = message;
+            saveIndicator.className = 'save-indicator' + (isError ? ' error' : '');
+            saveIndicator.classList.add('show');
+            
+            setTimeout(() => {
+                saveIndicator.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 更新抽签按钮状态
+        function updateDrawButtonState() {
+            if (numbersData.length === 0) {
+                drawButton.disabled = true;
+                numberHint.textContent = "请先添加至少一个数字";
+                numberHint.className = 'hint hint-error';
+            } else {
+                drawButton.disabled = false;
+                numberHint.textContent = `已添加 ${numbersData.length} 个数字，点击抽签进行分配`;
+                numberHint.className = 'hint hint-success';
+            }
+        }
+        
+        // 添加占位符以保持布局整齐
+        function addPlaceholders(listElement, count, type) {
+            // 确保至少有指定数量的显示项
+            for (let i = listElement.children.length; i < count; i++) {
+                const placeholderItem = document.createElement('div');
+                placeholderItem.className = `item placeholder-item ${type}-item`;
+                
+                if (type === 'result') {
+                    placeholderItem.innerHTML = `<span>-- 空位 --</span> <span class="result-number">-</span>`;
+                } else {
+                    placeholderItem.innerHTML = `<span>-- 空位 --</span>`;
+                }
+                
+                listElement.appendChild(placeholderItem);
+            }
+        }
+        
+        // 更新人员DOM
+        function updatePeopleDOM() {
+            // 清空现有列表
+            peopleList.innerHTML = '';
+            
+            // 添加所有人员
+            peopleData.forEach((person, index) => {
+                const personItem = document.createElement('div');
+                personItem.className = 'item person-item fade-in';
+                personItem.dataset.id = person.id;
+                personItem.innerHTML = `
+                    <input type="text" class="person-name-input" value="${person.name}" placeholder="请输入姓名">
+                    <button class="delete-btn">×</button>
+                `;
+                
+                peopleList.appendChild(personItem);
+                
+                // 为删除按钮添加事件监听
+                const deleteBtn = personItem.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', function() {
+                    deletePerson(person.id);
+                });
+                
+                // 为输入框添加事件监听
+                const nameInput = personItem.querySelector('.person-name-input');
+                nameInput.addEventListener('change', function() {
+                    updatePersonName(person.id, this.value);
+                });
+                
+                // 回车键保存功能
+                nameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        this.blur(); // 移除焦点，触发change事件
+                    }
+                });
+            });
+            
+            // 添加占位符
+            addPlaceholders(peopleList, 4, 'person');
+        }
+        
+        // 更新数字DOM
+        function updateNumbersDOM() {
+            // 清空现有列表
+            numbersList.innerHTML = '';
+            
+            // 添加所有数字
+            numbersData.forEach((number, index) => {
+                const numberItem = document.createElement('div');
+                numberItem.className = 'item number-item';
+                numberItem.innerHTML = `
+                    <input type="number" class="number-input" value="${number}" min="1" data-index="${index}">
+                    <button class="delete-btn">×</button>
+                `;
+                numbersList.appendChild(numberItem);
+                
+                // 为输入框添加事件监听
+                const numberInput = numberItem.querySelector('.number-input');
+                numberInput.addEventListener('change', function() {
+                    updateNumberValue(index, parseInt(this.value) || 1);
+                });
+                
+                // 为删除按钮添加事件监听
+                const deleteBtn = numberItem.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', function() {
+                    deleteNumber(index);
+                });
+            });
+            
+            // 添加占位符
+            addPlaceholders(numbersList, 4, 'number');
+            
+            // 更新按钮状态
+            updateDrawButtonState();
+        }
+        
+        // 更新结果DOM
+        function updateResultsDOM() {
+            // 清空现有列表
+            resultList.innerHTML = '';
+            
+            // 添加所有结果
+            peopleData.forEach((person, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'item result-item';
+                resultItem.dataset.id = person.id;
+                resultItem.innerHTML = `
+                    <span class="result-name">${person.name}</span> <span class="result-number">-</span>
+                `;
+                resultList.appendChild(resultItem);
+            });
+            
+            // 添加占位符
+            addPlaceholders(resultList, 4, 'result');
+        }
+        
+        // 添加人员
+        function addPerson(name) {
+            const id = generateId();
+            
+            // 添加到数据存储
+            peopleData.push({ id, name });
+            peopleCount = peopleData.length;
+            
+            // 更新DOM和保存数据
+            updatePeopleDOM();
+            updateResultsDOM();
+            saveData();
+            
+            return id;
+        }
+        
+        // 添加数字
+        function addNumber(number) {
+            // 添加到数据存储
+            numbersData.push(number);
+            numbersCount = numbersData.length;
+            
+            // 更新DOM
+            updateNumbersDOM();
+        }
+        
+        // 删除人员
+        function deletePerson(id) {
+            // 从数据存储中移除
+            peopleData = peopleData.filter(person => person.id !== id);
+            peopleCount = peopleData.length;
+            
+            // 更新DOM和保存数据
+            updatePeopleDOM();
+            updateResultsDOM();
+            saveData();
+        }
+        
+        // 删除数字
+        function deleteNumber(index) {
+            // 从数据存储中移除
+            numbersData.splice(index, 1);
+            numbersCount = numbersData.length;
+            
+            // 更新DOM
+            updateNumbersDOM();
+        }
+        
+        // 更新人员名称
+        function updatePersonName(id, newName) {
+            // 更新数据存储
+            const person = peopleData.find(p => p.id === id);
+            if (person) {
+                person.name = newName;
+            }
+            
+            // 更新结果DOM和保存数据
+            updateResultsDOM();
+            saveData();
+        }
+        
+        // 更新数字值
+        function updateNumberValue(index, newValue) {
+            // 更新数据存储
+            if (index >= 0 && index < numbersData.length) {
+                numbersData[index] = newValue;
+            }
+        }
+        
+        // 清空数字区域
+        function clearNumbers() {
+            numbersData = [];
+            numbersCount = 0;
+            updateNumbersDOM();
+        }
+        
+        // 添加人员功能
+        addPersonBtn.addEventListener('click', function() {
+            peopleCount++;
+            const newPersonName = `人员${peopleCount}`;
+            addPerson(newPersonName);
+        });
+        
+        // 添加数字功能
+        addNumberBtn.addEventListener('click', function() {
+            numbersCount++;
+            const newNumber = numbersCount;
+            addNumber(newNumber);
+        });
+        
+        // 抽签功能 - 修改为一次性为所有人分配数字
+        drawButton.addEventListener('click', function() {
+            // 获取所有数字（去重）
+            let numbers = [...new Set(numbersData)];
+            
+            // 若数字数量少于人员数量，补充默认数字
+            const currentPersonCount = peopleData.length;
+            if (numbers.length < currentPersonCount) {
+                for (let i = numbers.length; i < currentPersonCount; i++) {
+                    numbers.push(i + 1);
+                }
+                numberHint.textContent = `数字不足，已补充默认数字 ${currentPersonCount - numbersData.length} 个`;
+                numberHint.className = 'hint';
+            }
+            
+            // 随机打乱数字（使用Fisher-Yates洗牌算法）
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            const shuffledNumbers = shuffleArray(numbers);
+            
+            // 添加抽签动画
+            this.classList.add('pulse');
+            
+            // 显示结果（逐个添加脉冲动画）
+            const resultItems = resultList.querySelectorAll('.item:not(.placeholder-item)');
+            resultItems.forEach((item, index) => {
+                setTimeout(() => {
+                    if (index < shuffledNumbers.length) {
+                        const numberSpan = item.querySelector('.result-number');
+                        numberSpan.textContent = shuffledNumbers[index];
+                        item.classList.add('pulse');
+                        setTimeout(() => item.classList.remove('pulse'), 500);
+                    }
+                }, index * 150);
+            });
+            
+            // 标记已抽签
+            hasDrawn = true;
+            
+            // 清空数字区域，为下次抽签准备
+            setTimeout(() => {
+                clearNumbers();
+                this.classList.remove('pulse');
+                showSaveIndicator("抽签完成！请重新填写数字进行下一次抽签");
+            }, 1000);
+        });
+        
+        // 重置系统
+        resetButton.addEventListener('click', function() {
+            if (confirm("确定要重置系统吗？所有数据将恢复初始状态。")) {
+                peopleData = ["张三", "李四", "王五", "赵六"].map(name => ({
+                    id: generateId(),
+                    name: name
+                }));
+                numbersData = [];
+                peopleCount = peopleData.length;
+                numbersCount = 0;
+                hasDrawn = false;
+                
+                updatePeopleDOM();
+                updateNumbersDOM();
+                updateResultsDOM();
+                saveData();
+                
+                showSaveIndicator("系统已重置");
+            }
+        });
+        
+        // 初始化系统
+        initializeSystem();
+    </script>
+</body>
+</html>
